@@ -18,8 +18,8 @@ loom {
         convertAccessWideners = true
         extraAccessWideners.add loom.accessWidenerPath.get().asFile.name
 
-        mixinConfig "examplemod-common.mixins.json"
-        mixinConfig "examplemod.mixins.json"
+        mixinConfig "prismatic-common.mixins.json"
+        mixinConfig "prismatic.mixins.json"
     }
 }
 
@@ -41,6 +41,9 @@ dependencies {
 
     modApi "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"
     modApi "me.shedaniel:RoughlyEnoughItems-forge:${rei_version}"
+
+    modRuntimeOnly "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"
+    modRuntimeOnly "me.shedaniel:RoughlyEnoughItems-forge:${rei_version}"
 }
 
 processResources {

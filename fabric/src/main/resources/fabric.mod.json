@@ -1,27 +1,27 @@
 {
   "schemaVersion": 1,
-  "id": "examplemod",
+  "id": "prismatic",
   "version": "${version}",
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Prismatic Enchanter",
+  "description": "TODO",
   "authors": [
-    "Me!"
+    "AshIndigo"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://github.com/AshIndigo/PrismaticEnchanter",
+    "sources": "https://github.com/AshIndigo/PrismaticEnchanter"
   },
   "license": "Insert License Here",
-  "icon": "assets/examplemod/icon.png",
+  "icon": "assets/prismatic/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.examplemod.fabric.ExampleModFabric"
+      "net.ashindigo.prismatic.fabric.PrismaticModFabric"
     ]
   },
   "mixins": [
-    "examplemod.mixins.json",
-    "examplemod-common.mixins.json"
+    "prismatic.mixins.json",
+    "prismatic-common.mixins.json"
   ],
   "depends": {
     "fabric": "*",

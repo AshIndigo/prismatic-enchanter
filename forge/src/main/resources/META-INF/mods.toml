@@ -1,33 +1,33 @@
 modLoader = "javafml"
 loaderVersion = "[45,)"
-#issueTrackerURL = ""
-license = "Insert License Here"
+#issueTrackerURL = "https://github.com/AshIndigo/PrismaticEnchanter/issues"
+license = "MIT"
 
 [[mods]]
-modId = "examplemod"
+modId = "prismatic"
 version = "${version}"
-displayName = "Example Mod"
-authors = "Me!"
+displayName = "Prismatic Enchanter"
+authors = "Ash Indigo"
 description = '''
-This is an example description! Tell everyone what your mod is about!
+TODO
 '''
 #logoFile = ""
 
-[[dependencies.examplemod]]
+[[dependencies.prismatic]]
 modId = "forge"
 mandatory = true
 versionRange = "[45,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.examplemod]]
+[[dependencies.prismatic]]
 modId = "minecraft"
 mandatory = true
 versionRange = "[1.19.4,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.examplemod]]
+[[dependencies.prismatic]]
 modId = "architectury"
 mandatory = true
 versionRange = "[8.1.79,)"
