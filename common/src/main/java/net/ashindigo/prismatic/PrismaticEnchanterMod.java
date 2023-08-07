@@ -20,6 +20,8 @@ import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -39,10 +41,10 @@ public class PrismaticEnchanterMod {
     public static final CreativeTabRegistry.TabSupplier TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "prism_tab"), () -> new ItemStack(PrismaticEnchanterMod.ENCHANTER_ITEM.get()));
 
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(MOD_ID, Registries.ITEM);
-    public static final RegistrySupplier<Item> ENCHANTER_ITEM = ITEMS.register("enchanter", () -> new Item(new Item.Properties().arch$tab(PrismaticEnchanterMod.TAB)));
-
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(MOD_ID, Registries.BLOCK);
     public static final RegistrySupplier<Block> ENCHANTER = BLOCKS.register("enchanter", () -> new EnchanterBlock(BlockBehaviour.Properties.of(Material.HEAVY_METAL, MaterialColor.COLOR_BLACK)));
+    public static final RegistrySupplier<Item> ENCHANTER_ITEM = ITEMS.register("enchanter", () -> new BlockItem(ENCHANTER.get(), new Item.Properties().arch$tab(PrismaticEnchanterMod.TAB)));
+
 
     public static final DeferredRegister<BlockEntityType<?>> ENTITIES = DeferredRegister.create(MOD_ID, Registries.BLOCK_ENTITY_TYPE);
     public static final RegistrySupplier<BlockEntityType<?>> ENCHANTER_ENTITY = ENTITIES.register("enchanter", () -> BlockEntityType.Builder.of(EnchanterEntity::new).build(null));
@@ -52,8 +54,8 @@ public class PrismaticEnchanterMod {
 
 
     public static void init() {
-        ITEMS.register();
         BLOCKS.register();
+        ITEMS.register();
         ENTITIES.register();
         MENUS.register();
 
