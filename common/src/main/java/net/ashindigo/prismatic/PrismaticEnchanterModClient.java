@@ -6,6 +6,6 @@ import net.ashindigo.prismatic.client.screen.EnchanterScreen;
 public class PrismaticEnchanterModClient {
 
     public static void clientInit() {
-        MenuRegistry.registerScreenFactory(PrismaticEnchanterMod.ENCHANTER_MENU.getOrNull(), EnchanterScreen::new);
+        MenuRegistry.registerScreenFactory(PrismaticEnchanterMod.ENCHANTER_MENU.get(), EnchanterScreen::new);
     }
 }
