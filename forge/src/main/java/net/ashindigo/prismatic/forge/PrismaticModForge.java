@@ -16,11 +16,13 @@ public class PrismaticModForge {
     public PrismaticModForge() {
         // Submit our event bus to let architectury register our content on the right time
         EventBuses.registerModEventBus(PrismaticEnchanterMod.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::dataGen);
         PrismaticEnchanterMod.init();
     }
 
     @SubscribeEvent
     public void dataGen(GatherDataEvent event) {
+        System.out.println("fucker");
         DataGenerator generator = event.getGenerator();
         generator.addProvider(event.includeServer(), new PrismaticRecipeProvider(generator));
         generator.addProvider(event.includeClient(), new PrismaticItemModelProvider(generator, event.getExistingFileHelper()));

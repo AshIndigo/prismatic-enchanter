@@ -21,7 +21,7 @@ public class EnchanterEntity extends BlockEntity implements ExtendedMenuProvider
 
     @Override
     public Component getDisplayName() {
-        return Component.translatable("block.prismatic_enchanter.enchanter");
+        return Component.translatable("screen.prismatic.enchanter");
     }
 
     @Override

@@ -34,7 +34,7 @@ import net.minecraft.world.level.material.MaterialColor;
 import java.util.function.Supplier;
 
 public class PrismaticEnchanterMod {
-    public static final String MOD_ID = "prismatic_enchanter";
+    public static final String MOD_ID = "prismatic";
 
     public static final Supplier<RegistrarManager> REGISTRIES = Suppliers.memoize(() -> RegistrarManager.get(MOD_ID));
     // Registering a new creative tab
@@ -62,5 +62,9 @@ public class PrismaticEnchanterMod {
         System.out.println(PrismaticExpectPlatform.getConfigDirectory().toAbsolutePath().normalize().toString());
 
         ClientLifecycleEvent.CLIENT_SETUP.register((mc) -> PrismaticEnchanterModClient.clientInit());
+    }
+
+    public static ResourceLocation makeResourceLocation(String suffix) {
+        return new ResourceLocation(MOD_ID, suffix);
     }
 }

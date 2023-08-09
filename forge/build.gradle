@@ -11,6 +11,15 @@ repositories {
     maven { url "https://maven.shedaniel.me/" }
 }
 
+def generatedResources = file("src/generated")
+
+sourceSets {
+    main {
+        resources.srcDir generatedResources
+    }
+}
+
+
 loom {
     accessWidenerPath = project(":common").loom.accessWidenerPath
 
@@ -20,6 +29,15 @@ loom {
 
         mixinConfig "prismatic-common.mixins.json"
         mixinConfig "prismatic.mixins.json"
+    }
+
+    runs {
+        data {
+            data()
+            programArgs "--all", "--mod", "prismatic"
+            programArgs "--existing", file("src/main/resources").absolutePath
+            programArgs "--output", generatedResources.absolutePath
+        }
     }
 }
 
