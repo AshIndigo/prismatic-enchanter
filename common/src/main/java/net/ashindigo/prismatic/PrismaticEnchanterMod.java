@@ -11,6 +11,7 @@ import dev.architectury.registry.registries.RegistrySupplier;
 import net.ashindigo.prismatic.block.EnchanterBlock;
 import net.ashindigo.prismatic.entity.EnchanterEntity;
 import net.ashindigo.prismatic.menu.EnchanterMenu;
+import net.minecraft.client.searchtree.SearchRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -24,6 +25,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -51,6 +53,7 @@ public class PrismaticEnchanterMod {
 
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(MOD_ID, Registries.MENU);
     public static final RegistrySupplier<MenuType<EnchanterMenu>> ENCHANTER_MENU = MENUS.register("enchanter", () -> MenuRegistry.ofExtended(EnchanterMenu::new));
+    public static final SearchRegistry.Key<Enchantment> ENCHANTMENT_KEY = new SearchRegistry.Key<>();
 
 
     public static void init() {
