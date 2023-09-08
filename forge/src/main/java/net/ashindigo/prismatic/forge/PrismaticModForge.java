@@ -22,10 +22,9 @@ public class PrismaticModForge {
 
     @SubscribeEvent
     public void dataGen(GatherDataEvent event) {
-        System.out.println("fucker");
         DataGenerator generator = event.getGenerator();
         generator.addProvider(event.includeServer(), new PrismaticRecipeProvider(generator));
-        generator.addProvider(event.includeClient(), new PrismaticItemModelProvider(generator, event.getExistingFileHelper()));
         generator.addProvider(event.includeClient(), new PrismaticBlockStateModelProvider(generator, event.getExistingFileHelper()));
+        generator.addProvider(event.includeClient(), new PrismaticItemModelProvider(generator, event.getExistingFileHelper()));
     }
 }

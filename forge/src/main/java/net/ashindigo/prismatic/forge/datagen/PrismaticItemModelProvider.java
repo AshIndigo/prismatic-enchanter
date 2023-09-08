@@ -12,6 +12,6 @@ public class PrismaticItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
-
+        withExistingParent(PrismaticEnchanterMod.ENCHANTER.getId().getPath(), modLoc("block/enchanter"));
     }
 }

@@ -2,8 +2,9 @@ package net.ashindigo.prismatic;
 
 import com.google.common.base.Suppliers;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
+import dev.architectury.networking.simple.MessageType;
+import dev.architectury.networking.simple.SimpleNetworkManager;
 import dev.architectury.registry.CreativeTabRegistry;
-import dev.architectury.registry.menu.ExtendedMenuProvider;
 import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.RegistrarManager;
@@ -11,25 +12,16 @@ import dev.architectury.registry.registries.RegistrySupplier;
 import net.ashindigo.prismatic.block.EnchanterBlock;
 import net.ashindigo.prismatic.entity.EnchanterEntity;
 import net.ashindigo.prismatic.menu.EnchanterMenu;
-import net.minecraft.client.searchtree.SearchRegistry;
-import net.minecraft.core.BlockPos;
+import net.ashindigo.prismatic.networking.EnchantPacket;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.flag.FeatureFlagSet;
-import net.minecraft.world.flag.FeatureFlags;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.MaterialColor;
 
@@ -53,7 +45,9 @@ public class PrismaticEnchanterMod {
 
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(MOD_ID, Registries.MENU);
     public static final RegistrySupplier<MenuType<EnchanterMenu>> ENCHANTER_MENU = MENUS.register("enchanter", () -> MenuRegistry.ofExtended(EnchanterMenu::new));
-    public static final SearchRegistry.Key<Enchantment> ENCHANTMENT_KEY = new SearchRegistry.Key<>();
+
+    public static final SimpleNetworkManager NETWORK_MANAGER = SimpleNetworkManager.create(MOD_ID);
+    public static final MessageType ENCHANT_PACKET = NETWORK_MANAGER.registerC2S("enchant", EnchantPacket::new);
 
 
     public static void init() {
@@ -61,9 +55,6 @@ public class PrismaticEnchanterMod {
         ITEMS.register();
         ENTITIES.register();
         MENUS.register();
-
-        System.out.println(PrismaticExpectPlatform.getConfigDirectory().toAbsolutePath().normalize().toString());
-
         ClientLifecycleEvent.CLIENT_SETUP.register((mc) -> PrismaticEnchanterModClient.clientInit());
     }
 
