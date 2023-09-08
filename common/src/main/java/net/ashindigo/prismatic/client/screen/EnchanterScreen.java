@@ -251,7 +251,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
     @Override
     public boolean mouseDragged(double pMouseX, double pMouseY, int pButton, double pDragX, double pDragY) {
         if (this.scrolling) {
-            int i = this.topPos + 18 + 7;
+            int i = this.topPos + 25;
             int j = i + 112;
             setScrollOffs(((float) pMouseY - (float) i - 7.5F) / ((float) (j - i) - 15.0F));
             scrollTo(scrollOffs);
@@ -264,8 +264,8 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
     protected boolean insideScrollbar(double x, double y) {
         int i = this.leftPos;
         int j = this.topPos;
-        int xCheck = i + 175 + 110;
-        int yCheck = j + 18 + 7;
+        int xCheck = i + 285;
+        int yCheck = j + 25;
         int xCheckMax = xCheck + 14;
         int yCheckMax = yCheck + 112;
         return x >= (double) xCheck && y >= (double) yCheck && x < (double) xCheckMax && y < (double) yCheckMax;
@@ -294,18 +294,19 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
 //
 //            }
 //        }
-        int i = (enchantmentList.size() + 1 - 1) - 7;
+        int i = (enchantmentEntryList.size() + 1 - 1) - 7;
         int j = (int) ((double) (pos * (float) i) + 0.5D);
 
         if (j < 0) {
             j = 0;
         }
 
-        for (int y = 0; y < enchantmentList.size(); ++y) {
+        for (int y = 0; y < enchantmentEntryList.size(); ++y) {
             if (j == 0) {
-
+                enchantmentEntryList.get(y).setY((topPos + 25) + (y * 19)); // topPos + 25 + (i * 19) // (this.topPos + 46) + (y * 18)
                 //StorageCabinetExpectPlatform.setSlotY(slots.get(y * 9 + x), 18 + y * 18);
             } else {
+                enchantmentEntryList.get(y).setY((topPos + 25) + ((y - j) * 19)); // (this.topPos + 46) + ((y - j) * 18)
                 //StorageCabinetExpectPlatform.setSlotY(slots.get(y * 9 + x), 18 + (y - j) * 18);
             }
         }
@@ -328,7 +329,8 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
             inc = Button.builder(Component.literal("+"), (tst) -> {
                 level = Math.min(enchant.getMaxLevel(), level + 1);
                 super.setMessage(enchant.getFullname(level));
-            }).pos(x - 10, y).size(10, 19).build();//new Button(x - 10, y, 10, 19, Component.literal("+"), (tst) -> level++, (nar) -> component.copy());
+            }).pos(x - 10, y).size(10, 19).build();
+
             dec = Button.builder(Component.literal("-"), (tst) -> {
                 level = Math.max(enchant.getMinLevel(), level - 1);
                 super.setMessage(enchant.getFullname(level));
@@ -346,13 +348,8 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
 
         @Override
         public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
-            if (this.getY() < (topPos + 24) + (7 * 19)) {
+            if ((this.getY() < (topPos + 24) + (7 * 19)) && getY() > (topPos+24)) {
                 super.renderWidget(poseStack, mouseX, mouseY, partialTick);
-                inc.visible = true;
-                dec.visible = true;
-            } else {
-                inc.visible = false;
-                dec.visible = false;
             }
         }
 
@@ -362,6 +359,20 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
 
         public void setEnchant(Enchantment enchant) {
             this.enchant = enchant;
+        }
+
+        @Override
+        public void setY(int y) {
+            super.setY(y);
+            inc.setY(y);
+            dec.setY(y);
+            if ((this.getY() < (topPos + 24) + (7 * 19)) && getY() > (topPos+24)) {
+                inc.visible = true;
+                dec.visible = true;
+            } else {
+                inc.visible = false;
+                dec.visible = false;
+            }
         }
 
         public void removeButton() {
