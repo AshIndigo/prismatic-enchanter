@@ -19,18 +19,19 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.MaterialColor;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 public class PrismaticEnchanterMod {
     public static final String MOD_ID = "prismatic";
 
-    public static final Supplier<RegistrarManager> REGISTRIES = Suppliers.memoize(() -> RegistrarManager.get(MOD_ID));
     // Registering a new creative tab
     public static final CreativeTabRegistry.TabSupplier TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "prism_tab"), () -> new ItemStack(PrismaticEnchanterMod.ENCHANTER_ITEM.get()));
 
@@ -55,10 +56,18 @@ public class PrismaticEnchanterMod {
         ITEMS.register();
         ENTITIES.register();
         MENUS.register();
-        ClientLifecycleEvent.CLIENT_SETUP.register((mc) -> PrismaticEnchanterModClient.clientInit());
     }
 
     public static ResourceLocation makeResourceLocation(String suffix) {
         return new ResourceLocation(MOD_ID, suffix);
+    }
+
+    public static int getTotalCost(List<EnchantmentInstance> selected) {
+        int cost = 0;
+        for (EnchantmentInstance enchantmentInstance : selected) {
+            cost += (enchantmentInstance.enchantment.getRarity().ordinal() + 1) * 2;
+        }
+        return cost;
+        //return selected.stream().mapToInt(inst -> inst.enchantment.getMinCost(inst.level)).sum();
     }
 }

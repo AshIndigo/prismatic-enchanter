@@ -17,6 +17,9 @@
   "entrypoints": {
     "main": [
       "net.ashindigo.prismatic.fabric.PrismaticModFabric"
+    ],
+    "client": [
+      "net.ashindigo.prismatic.fabric.PrismaticModFabricClient"
     ]
   },
   "mixins": [

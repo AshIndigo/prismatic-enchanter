@@ -1,5 +1,7 @@
 package net.ashindigo.prismatic.menu;
 
+import dev.architectury.event.Event;
+import net.ashindigo.prismatic.Callable;
 import net.ashindigo.prismatic.PrismaticEnchanterMod;
 import net.ashindigo.prismatic.entity.EnchanterEntity;
 import net.minecraft.core.BlockPos;
@@ -11,9 +13,12 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import java.util.function.Consumer;
+
 public class EnchanterMenu extends AbstractContainerMenu {
 
     public EnchanterEntity entity;
+    private Callable refreshSearchResults;
 
     public EnchanterMenu(int i, Inventory inv, BlockPos pos) {
         super(PrismaticEnchanterMod.ENCHANTER_MENU.get(), i);
@@ -75,6 +80,9 @@ public class EnchanterMenu extends AbstractContainerMenu {
             }
             slot.onTake(player, itemStack2);
         }
+        if (refreshSearchResults != null) {
+            refreshSearchResults.call();
+        }
         return itemStack;
     }
 
@@ -85,5 +93,10 @@ public class EnchanterMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) {
         return true;
+    }
+
+    public void registerFunc(Callable refreshSearchResults) {
+
+        this.refreshSearchResults = refreshSearchResults;
     }
 }

@@ -61,5 +61,6 @@ public class EnchantPacket extends BaseC2SMessage {
         } else {
             enchantments.forEach(ench -> blockEntity.getItem(0).enchant(ench.enchantment, ench.level));
         }
+        context.getPlayer().giveExperienceLevels(-PrismaticEnchanterMod.getTotalCost(enchantments));
     }
 }
