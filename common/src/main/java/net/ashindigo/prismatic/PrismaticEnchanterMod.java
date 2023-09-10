@@ -1,13 +1,10 @@
 package net.ashindigo.prismatic;
 
-import com.google.common.base.Suppliers;
-import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.networking.simple.MessageType;
 import dev.architectury.networking.simple.SimpleNetworkManager;
 import dev.architectury.registry.CreativeTabRegistry;
 import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.DeferredRegister;
-import dev.architectury.registry.registries.RegistrarManager;
 import dev.architectury.registry.registries.RegistrySupplier;
 import net.ashindigo.prismatic.block.EnchanterBlock;
 import net.ashindigo.prismatic.entity.EnchanterEntity;
@@ -19,18 +16,18 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.MaterialColor;
 
-import java.util.function.Supplier;
+import java.util.List;
 
 public class PrismaticEnchanterMod {
     public static final String MOD_ID = "prismatic";
 
-    public static final Supplier<RegistrarManager> REGISTRIES = Suppliers.memoize(() -> RegistrarManager.get(MOD_ID));
     // Registering a new creative tab
     public static final CreativeTabRegistry.TabSupplier TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "prism_tab"), () -> new ItemStack(PrismaticEnchanterMod.ENCHANTER_ITEM.get()));
 
@@ -55,10 +52,18 @@ public class PrismaticEnchanterMod {
         ITEMS.register();
         ENTITIES.register();
         MENUS.register();
-        ClientLifecycleEvent.CLIENT_SETUP.register((mc) -> PrismaticEnchanterModClient.clientInit());
     }
 
     public static ResourceLocation makeResourceLocation(String suffix) {
         return new ResourceLocation(MOD_ID, suffix);
+    }
+
+    public static int getTotalCost(List<EnchantmentInstance> selected) {
+        int cost = 0;
+        for (EnchantmentInstance enchantmentInstance : selected) {
+            cost += (enchantmentInstance.enchantment.getRarity().ordinal() + 1) * 2;
+        }
+        return cost;
+        //return selected.stream().mapToInt(inst -> inst.enchantment.getMinCost(inst.level)).sum();
     }
 }

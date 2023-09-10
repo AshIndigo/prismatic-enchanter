@@ -1,26 +1,29 @@
 {
   "schema_version": 1,
   "mixin": [
-    "examplemod.mixins.json",
-    "examplemod-common.mixins.json"
+    "prismatic.mixins.json",
+    "prismatic-common.mixins.json"
   ],
   "quilt_loader": {
     "group": "${group}",
-    "id": "examplemod",
+    "id": "prismatic",
     "version": "${version}",
-    "name": "Example Mod",
-    "description": "This is an example description! Tell everyone what your mod is about!",
-    "authors": ["Me!"],
+    "name": "Prismatic Enchanter",
+    "description": "TODO",
+    "authors": ["AshIndigo"],
     "contact": {
       "sources": "https://github.com/architectury/architectury-templates"
     },
     "license": "Insert License Here",
-    "icon": "assets/examplemod/icon.png",
+    "icon": "assets/prismatic/icon.png",
     "intermediate_mappings": "net.fabricmc:intermediary",
     "environment": "*",
     "entrypoints": {
       "init": [
-        "net.examplemod.quilt.ExampleModQuilt"
+        "net.ashindigo.prismatic.quilt.PrismaticModQuilt"
+      ],
+      "client_init": [
+        "net.ashindigo.prismatic.quilt.PrismaticModQuiltClient"
       ]
     },
     "depends": [

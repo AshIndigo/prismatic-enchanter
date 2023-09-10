@@ -2,6 +2,7 @@ package net.ashindigo.prismatic.forge;
 
 import dev.architectury.platform.forge.EventBuses;
 import net.ashindigo.prismatic.PrismaticEnchanterMod;
+import net.ashindigo.prismatic.PrismaticEnchanterModClient;
 import net.ashindigo.prismatic.forge.datagen.PrismaticBlockStateModelProvider;
 import net.ashindigo.prismatic.forge.datagen.PrismaticItemModelProvider;
 import net.ashindigo.prismatic.forge.datagen.PrismaticRecipeProvider;
@@ -9,6 +10,7 @@ import net.minecraft.data.DataGenerator;
 import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod(PrismaticEnchanterMod.MOD_ID)
@@ -17,7 +19,13 @@ public class PrismaticModForge {
         // Submit our event bus to let architectury register our content on the right time
         EventBuses.registerModEventBus(PrismaticEnchanterMod.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::dataGen);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::registerClient);
         PrismaticEnchanterMod.init();
+    }
+
+    @SubscribeEvent
+    public void registerClient(FMLClientSetupEvent event) {
+        PrismaticEnchanterModClient.clientInit();
     }
 
     @SubscribeEvent

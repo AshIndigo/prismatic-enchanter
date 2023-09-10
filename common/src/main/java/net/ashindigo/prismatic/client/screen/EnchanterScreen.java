@@ -7,12 +7,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.ashindigo.prismatic.PrismaticEnchanterMod;
 import net.ashindigo.prismatic.menu.EnchanterMenu;
 import net.ashindigo.prismatic.networking.EnchantPacket;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
@@ -32,30 +34,39 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
 
     private static final ResourceLocation ENCHANTING_TABLE_LOCATION = PrismaticEnchanterMod.makeResourceLocation("textures/gui/enchanter.png");
     public static final ResourceLocation CREATIVE_INVENTORY_TABS = new ResourceLocation("textures/gui/container/creative_inventory/tabs.png");
+    private final Inventory inventory;
     public EditBox searchBox;
     Button enchantBtn;
     StringWidget xpCost;
     public float scrollOffs;
     public boolean scrolling;
 
-    public List<Enchantment> enchantmentList = new ArrayList<>();
-    public List<EnchantmentButton> enchantmentEntryList = new ArrayList<>();
-    public List<EnchantmentInstance> selected = new ArrayList<>();
+    public final List<Enchantment> enchantmentList = new ArrayList<>();
+    public final List<EnchantmentButton> enchantmentEntryList = new ArrayList<>();
+    public final List<EnchantmentInstance> selected = new ArrayList<>();
 
     public EnchanterScreen(EnchanterMenu abstractContainerMenu, Inventory inventory, Component component) {
         super(abstractContainerMenu, inventory, component);
+        this.inventory = inventory;
     }
 
     @Override
     protected void init() {
         super.init();
+        menu.registerFunc(this::refreshSearchResults);
         this.imageHeight = 165;
         this.imageWidth = 302;
         this.leftPos = (this.width - this.imageWidth) / 2;
         this.topPos = (this.height - this.imageHeight) / 2;
         searchBox = new EditBox(this.font, this.leftPos + 174, this.topPos + 14, 108, 10, Component.translatable("text.search")); // 82
         addRenderableWidget(searchBox);
-        enchantBtn = Button.builder(Component.literal("Enchant"), btn -> new EnchantPacket(menu.entity.getBlockPos(), selected).sendToServer()).size(45, 18).pos(this.leftPos + 34, this.topPos + 46).build();
+        enchantBtn = Button.builder(Component.literal("Enchant"), btn -> {
+            if (inventory.player.experienceLevel >= PrismaticEnchanterMod.getTotalCost(selected)) {
+                new EnchantPacket(menu.entity.getBlockPos(), selected).sendToServer();
+                Minecraft.getInstance().player.playSound(SoundEvents.ENCHANTMENT_TABLE_USE, 1, Minecraft.getInstance().level.random.nextFloat() * 0.1f + 0.9f);
+                // TODO Clear enchant list after enchant?
+            }
+        }).size(45, 18).pos(this.leftPos + 34, this.topPos + 46).build();
         addRenderableWidget(enchantBtn);
         Button clearBtn = Button.builder(Component.literal("Clear"), inst -> {
             selected.clear();
@@ -63,7 +74,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
         }).size(30, 18).pos(this.leftPos + 132, this.topPos + 46).build();
         addRenderableWidget(clearBtn);
 
-        xpCost = new StringWidget(Component.literal("XP Cost: ").append(Component.literal(Integer.toString(getTotalCost()))), this.font) {
+        xpCost = new StringWidget(Component.literal("XP Level Cost: ").append(Component.literal(Integer.toString(PrismaticEnchanterMod.getTotalCost(selected)))), this.font) {
             @Override
             public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
                 fillGradient(poseStack, getX() - 2, getY() - 2, getX() + font.width(getMessage()) + 2, getY() + height + 2, -1072689136, -804253680);
@@ -86,16 +97,11 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
     }
 
     private void updateCostText() {
-        xpCost.setMessage(Component.literal("XP Cost: ").append(Component.literal(Integer.toString(getTotalCost()))));
-    }
-
-    private int getTotalCost() {
-        return selected.stream().mapToInt(inst -> inst.enchantment.getMinCost(inst.level)).sum();
+        xpCost.setMessage(Component.literal("XP Cost: ").append(Component.literal(Integer.toString(PrismaticEnchanterMod.getTotalCost(selected)))));
     }
 
     @Override
     protected void renderBg(PoseStack poseStack, float rT, int x, int y) {
-        //this.renderBackground(poseStack);
         Lighting.setupForFlatItems();
         RenderSystem.setShaderTexture(0, ENCHANTING_TABLE_LOCATION);
         blit(poseStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 512, 512);
@@ -160,7 +166,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
         return super.keyReleased(i, j, k);
     }
 
-    private void refreshSearchResults() {
+    public void refreshSearchResults() {
         enchantmentList.clear();
         enchantmentEntryList.forEach(EnchantmentButton::removeButton);
         enchantmentEntryList.clear();
@@ -220,7 +226,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
     public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {
         if (pButton == 0) {
             if (this.insideScrollbar(pMouseX, pMouseY)) {
-                this.scrolling = enchantmentList.size() > 7;//this.menu.slots.size() > 90;
+                this.scrolling = enchantmentList.size() > 7;
                 return true;
             }
         }
@@ -237,10 +243,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
 
     @Override
     public boolean mouseScrolled(double pMouseX, double pMouseY, double pDelta) {
-//        if (menu.slots.size() - 36 == 0) return true;
-//        int i = (menu.slots.size() - 36 + StorageCabinetBlock.getWidth() - 1) / StorageCabinetBlock.getWidth() - selectedHeight.getVerticalSlotCount();
-        //if (3 - 4 == 0) return true; // todo
-        //int i = 1; // TODO
         if (enchantmentList.size() - 7 == 0) return true;
         int i = (enchantmentList.size() - 7) - 7;
         setScrollOffs((float) ((double) this.scrollOffs - pDelta / (double) i));
@@ -276,24 +278,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
     }
 
     public void scrollTo(float pos) {
-//        int i = (this.entity.getContainerSize() + 9 - 1) / 9 - getDisplayHeight().getVerticalSlotCount(); // 25.8888888889 for 270 slots
-//        int j = (int) ((double) (pos * (float) i) + 0.5D);
-//
-//        if (j < 0) {
-//            j = 0;
-//        }
-//
-//        // Iterate through all slots
-//        for (int y = 0; y < StorageCabinetBlock.getHeight(tier); ++y) {
-//            for (int x = 0; x < StorageCabinetBlock.getWidth(); ++x) {
-//                if (j == 0) {
-//                    StorageCabinetExpectPlatform.setSlotY(slots.get(y * 9 + x), 18 + y * 18);
-//                } else {
-//                    StorageCabinetExpectPlatform.setSlotY(slots.get(y * 9 + x), 18 + (y - j) * 18);
-//                }
-//
-//            }
-//        }
         int i = (enchantmentEntryList.size() + 1 - 1) - 7;
         int j = (int) ((double) (pos * (float) i) + 0.5D);
 
@@ -303,25 +287,23 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
 
         for (int y = 0; y < enchantmentEntryList.size(); ++y) {
             if (j == 0) {
-                enchantmentEntryList.get(y).setY((topPos + 25) + (y * 19)); // topPos + 25 + (i * 19) // (this.topPos + 46) + (y * 18)
-                //StorageCabinetExpectPlatform.setSlotY(slots.get(y * 9 + x), 18 + y * 18);
+                enchantmentEntryList.get(y).setY((topPos + 25) + (y * 19));
             } else {
-                enchantmentEntryList.get(y).setY((topPos + 25) + ((y - j) * 19)); // (this.topPos + 46) + ((y - j) * 18)
-                //StorageCabinetExpectPlatform.setSlotY(slots.get(y * 9 + x), 18 + (y - j) * 18);
+                enchantmentEntryList.get(y).setY((topPos + 25) + ((y - j) * 19));
             }
         }
     }
 
     @Override
     protected void containerTick() {
-        super.containerTick();
         searchBox.tick();
+        enchantBtn.active = inventory.player.totalExperience >= PrismaticEnchanterMod.getTotalCost(selected);
     }
 
     public class EnchantmentButton extends Button {
         Enchantment enchant;
-        Button inc;
-        Button dec;
+        final Button inc;
+        final Button dec;
         public int level = 1;
 
         protected EnchantmentButton(int x, int y, int wid, int len, Component component, OnPress onPress, CreateNarration createNarration) {
@@ -348,7 +330,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
 
         @Override
         public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
-            if ((this.getY() < (topPos + 24) + (7 * 19)) && getY() > (topPos+24)) {
+            if ((this.getY() < (topPos + 24) + (7 * 19)) && getY() > (topPos + 24)) {
                 super.renderWidget(poseStack, mouseX, mouseY, partialTick);
             }
         }
@@ -366,7 +348,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
             super.setY(y);
             inc.setY(y);
             dec.setY(y);
-            if ((this.getY() < (topPos + 24) + (7 * 19)) && getY() > (topPos+24)) {
+            if ((this.getY() < (topPos + 24) + (7 * 19)) && getY() > (topPos + 24)) {
                 inc.visible = true;
                 dec.visible = true;
             } else {
