@@ -45,6 +45,8 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
     public final List<EnchantmentButton> enchantmentEntryList = new ArrayList<>();
     public final List<EnchantmentInstance> selected = new ArrayList<>();
 
+    public final EnchantmentListComponent enchantmentListComponent = new EnchantmentListComponent();
+
     public EnchanterScreen(EnchanterMenu abstractContainerMenu, Inventory inventory, Component component) {
         super(abstractContainerMenu, inventory, component);
         this.inventory = inventory;
@@ -54,50 +56,61 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
     protected void init() {
         super.init();
         menu.registerFunc(this::refreshSearchResults);
-        this.imageHeight = 165;
+        this.imageHeight = 166;
         this.imageWidth = 302;
-        this.leftPos = (this.width - this.imageWidth) / 2;
+        this.leftPos = this.enchantmentListComponent.updateScreenPosition(this.width, this.imageWidth);
+        //this.leftPos = (this.width - this.imageWidth) / 2;
         this.topPos = (this.height - this.imageHeight) / 2;
-        searchBox = new EditBox(this.font, this.leftPos + 174, this.topPos + 14, 108, 10, Component.translatable("text.search")); // 82
+        this.enchantmentListComponent.init(this.width, this.height, this.minecraft, this.width < 379, this);
+        searchBox = new EditBox(this.font, this.leftPos + 172, this.topPos + 14, 110, 10, Component.translatable("text.search")); // 82
         addRenderableWidget(searchBox);
         enchantBtn = Button.builder(Component.literal("Enchant"), btn -> {
             if (inventory.player.experienceLevel >= PrismaticEnchanterMod.getTotalCost(selected)) {
                 new EnchantPacket(menu.entity.getBlockPos(), selected).sendToServer();
                 Minecraft.getInstance().player.playSound(SoundEvents.ENCHANTMENT_TABLE_USE, 1, Minecraft.getInstance().level.random.nextFloat() * 0.1f + 0.9f);
-                // TODO Clear enchant list after enchant?
+                //refreshSearchResults(); // TODO Need to know when its done enchanting...
+                clearSelected();
+//                if (menu.getSlot(0).getItem().is(Items.BOOK)) { // I'll take bad ideas for 5$
+//                    ItemStack book = Items.ENCHANTED_BOOK.getDefaultInstance();
+//                    selected.forEach(ench -> EnchantedBookItem.addEnchantment(book, ench));
+//                    menu.getSlot(0).set(book);
+//                } else {
+//                    selected.forEach(ench -> menu.getSlot(0).getItem().enchant(ench.enchantment, ench.level));
+//                }
+                refreshSearchResults();
             }
         }).size(45, 18).pos(this.leftPos + 34, this.topPos + 46).build();
         addRenderableWidget(enchantBtn);
-        Button clearBtn = Button.builder(Component.literal("Clear"), inst -> {
-            selected.clear();
-            updateCostText();
-        }).size(30, 18).pos(this.leftPos + 132, this.topPos + 46).build();
+        Button clearBtn = Button.builder(Component.literal("Clear"), inst -> clearSelected()).size(30, 18).pos(this.leftPos + 132, this.topPos + 46).build();
         addRenderableWidget(clearBtn);
 
-        xpCost = new StringWidget(Component.literal("XP Level Cost: ").append(Component.literal(Integer.toString(PrismaticEnchanterMod.getTotalCost(selected)))), this.font) {
-            @Override
-            public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
-                fillGradient(poseStack, getX() - 2, getY() - 2, getX() + font.width(getMessage()) + 2, getY() + height + 2, -1072689136, -804253680);
-                super.renderWidget(poseStack, mouseX, mouseY, partialTick);
-            }
-        }.alignCenter();
-        xpCost.setPosition(this.leftPos + 14, this.topPos + 22);
+        xpCost = new StringWidget(Component.literal(Integer.toString(PrismaticEnchanterMod.getTotalCost(selected))), font);
+        xpCost.setPosition(this.leftPos + 14 + 12, this.topPos + 21);
         addRenderableWidget(xpCost);
-
-        StringWidget review = new StringWidget(Component.literal("Review"), this.font) {
-            @Override
-            public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
-                fillGradient(poseStack, getX() - 2, getY() - 1, getX() + font.width(getMessage()) + 2, getY() + height + 2, -1072689136, -804253680);
-                super.renderWidget(poseStack, mouseX, mouseY, partialTick);
-            }
-        }.alignCenter();
-        review.setPosition(this.leftPos + 14, this.topPos + 34);
-        addRenderableWidget(review);
+        ImageButton reviewButton = addRenderableWidget(new ImageButton(leftPos + 82, topPos + 46, 20, 18, 0, 0, 19, new ResourceLocation("textures/gui/recipe_button.png"), button -> {
+            enchantmentListComponent.toggleVisibility();
+            this.leftPos = this.enchantmentListComponent.updateScreenPosition(this.width, this.imageWidth);
+            button.setX(this.leftPos + 82);
+            enchantBtn.setX(this.leftPos + 34);
+            clearBtn.setX(this.leftPos + 132);
+            enchantmentEntryList.forEach(btn -> btn.setX(leftPos + 192));
+            searchBox.setX(leftPos + 174);
+            xpCost.setX(this.leftPos + 14 + 12);
+        }));
+        reviewButton.setTooltip(Tooltip.create(Component.translatable("text.prismatic.review")));
+        addWidget(enchantmentListComponent);
         refreshSearchResults();
     }
 
+    private void clearSelected() {
+        selected.clear();
+        enchantmentListComponent.clearList();
+        updateCostText();
+        enchantCheck();
+    }
+
     private void updateCostText() {
-        xpCost.setMessage(Component.literal("XP Cost: ").append(Component.literal(Integer.toString(PrismaticEnchanterMod.getTotalCost(selected)))));
+        xpCost.setMessage(Component.literal(Integer.toString(PrismaticEnchanterMod.getTotalCost(selected))));
     }
 
     @Override
@@ -105,6 +118,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
         Lighting.setupForFlatItems();
         RenderSystem.setShaderTexture(0, ENCHANTING_TABLE_LOCATION);
         blit(poseStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 512, 512);
+        blit(poseStack, this.leftPos + 8, this.topPos + 18, 0, 223, 16, 16, 512, 512); // TODO Draws XP cost icon, needs custom graphic
         RenderSystem.setShaderTexture(0, CREATIVE_INVENTORY_TABS);
         int i = this.leftPos + 175;
         int j = this.topPos + 18 + 7;
@@ -117,6 +131,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
         partialTick = this.minecraft.getFrameTime();
         this.renderBackground(poseStack);
         super.render(poseStack, mouseX, mouseY, partialTick);
+        enchantmentListComponent.render(poseStack, mouseX, mouseY, partialTick);
         this.renderTooltip(poseStack, mouseX, mouseY);
     }
 
@@ -144,12 +159,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
 
     @Override
     public boolean keyPressed(int i, int j, int k) {
-//        boolean flag = !this.isCreativeSlot(this.hoveredSlot) || this.hoveredSlot.hasItem();
-//        boolean flag1 = InputConstants.getKey(i, j).getNumericKeyValue().isPresent();
-//        if (flag && flag1 && this.checkHotbarKeyPressed(i, j)) {
-//            //this.ignoreTextInput = true;
-//            return true;
-//        }
         String s = this.searchBox.getValue();
         if (this.searchBox.keyPressed(i, j, k)) {
             if (!Objects.equals(s, this.searchBox.getValue())) {
@@ -157,13 +166,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
             }
             return true;
         }
-        return this.searchBox.isFocused() && this.searchBox.isVisible() && i != 256 ? true : super.keyPressed(i, j, k);
-    }
-
-    @Override
-    public boolean keyReleased(int i, int j, int k) {
-        //this.ignoreTextInput = false;
-        return super.keyReleased(i, j, k);
+        return this.searchBox.isFocused() && this.searchBox.isVisible() && i != 256 || super.keyPressed(i, j, k);
     }
 
     public void refreshSearchResults() {
@@ -174,8 +177,15 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
         AtomicInteger i = new AtomicInteger();
         if (menu.getSlot(0).hasItem()) {
             getAvailableEnchantmentResults(BuiltInRegistries.ENCHANTMENT.entrySet().stream().filter(resourceKeyEnchantmentEntry -> resourceKeyEnchantmentEntry.getValue().getFullname(1).getString().toLowerCase(Locale.ROOT).contains(s.toLowerCase(Locale.ROOT))), menu.getSlot(0).getItem(), true).forEach(inst -> {
-                if (isCompatible(EnchantmentHelper.getEnchantments(menu.getSlot(0).getItem()).keySet(), inst.enchantment)) {
-                    addEnchantToList(inst.enchantment, i.getAndIncrement());
+                Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(menu.getSlot(0).getItem());
+                if (isCompatible(enchantments.keySet(), inst.enchantment)) {
+                    if (enchantments.containsKey(inst.enchantment)) {
+                        if (enchantments.get(inst.enchantment) != inst.enchantment.getMaxLevel()) {
+                            addEnchantToList(inst.enchantment, i.getAndIncrement());
+                        }
+                    } else {
+                        addEnchantToList(inst.enchantment, i.getAndIncrement());
+                    }
                 }
             });
         }
@@ -204,20 +214,43 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
     public static boolean isCompatible(Collection<Enchantment> enchantments, Enchantment addition) {
         for (Enchantment e : enchantments) {
             if (e.equals(addition)) return true;
-            if (!e.isCompatibleWith(addition))
+            if (!e.isCompatibleWith(addition)) {
                 return false;
+            }
         }
         return true;
     }
 
     private void addEnchantToList(Enchantment entry, int i) {
         enchantmentList.add(entry);
-        enchantmentEntryList.add(new EnchantmentButton(leftPos + 173 + 20 - 1, topPos + 25 + (i * 19), 91, 19, entry.getFullname(1), button -> {
+        enchantmentEntryList.add(new EnchantmentButton(leftPos + 173 + 20 - 1, topPos + 25 + (i * 19), 90, 19, entry.getFullname(1), button -> {
             if (selected.stream().noneMatch(inst -> inst.enchantment.equals(entry))) { // TODO maybe replace based on ench level if different one is selected? // inst.level == ((EnchantmentButton) button).level &&
                 selected.add(new EnchantmentInstance(entry, ((EnchantmentButton) button).level));
+                enchantmentListComponent.addToList(entry, ((EnchantmentButton) button).level);
                 updateCostText();
+                enchantCheck();
             }
         }, (supplier) -> entry.getFullname(1).copy(), entry));
+    }
+
+    public void enchantCheck() {
+        if ((minecraft.player.experienceLevel >= PrismaticEnchanterMod.getTotalCost(selected))) {
+            ItemStack stack = menu.getSlot(0).getItem();
+            for (EnchantmentInstance ench : selected) {
+                if (EnchantmentHelper.getEnchantments(stack).containsKey(ench.enchantment)) {
+                    if (EnchantmentHelper.getEnchantments(stack).get(ench.enchantment) < ench.level) {
+                        enchantBtn.active = true;
+                    } else {
+                        enchantBtn.active = false;
+                        return;
+                    }
+                } else {
+                    enchantBtn.active = true;
+                }
+            }
+        } else {
+            enchantBtn.active = false;
+        }
     }
 
     // Scrolling
@@ -297,7 +330,13 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
     @Override
     protected void containerTick() {
         searchBox.tick();
-        enchantBtn.active = inventory.player.totalExperience >= PrismaticEnchanterMod.getTotalCost(selected);
+    }
+
+    public int getTopPos() {
+        return topPos;
+    }
+    public int getImageWidth() {
+        return imageWidth;
     }
 
     public class EnchantmentButton extends Button {
@@ -326,6 +365,10 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
         protected EnchantmentButton(int x, int y, int wid, int len, Component component, OnPress onPress, CreateNarration createNarration, Enchantment ench) {
             this(x, y, wid, len, component, onPress, createNarration);
             enchant = ench;
+            if (enchant.getMaxLevel() == 1) {
+                inc.active = false;
+                dec.active = false;
+            }
         }
 
         @Override
@@ -335,12 +378,18 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
             }
         }
 
-        public Enchantment getEnchant() {
-            return enchant;
+        @Override
+        public void setPosition(int x, int y) {
+            super.setPosition(x, y);
+            dec.setPosition(x, y);
+            inc.setPosition(x, y);
         }
 
-        public void setEnchant(Enchantment enchant) {
-            this.enchant = enchant;
+        @Override
+        public void setX(int x) {
+            super.setX(x);
+            dec.setX(x-10);
+            inc.setX(x-20);
         }
 
         @Override
@@ -364,4 +413,5 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
         }
 
     }
+
 }

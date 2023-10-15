@@ -7,11 +7,13 @@ import net.ashindigo.prismatic.PrismaticEnchanterMod;
 import net.ashindigo.prismatic.entity.EnchanterEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 
 import java.util.ArrayList;
@@ -59,8 +61,19 @@ public class EnchantPacket extends BaseC2SMessage {
             enchantments.forEach(ench -> EnchantedBookItem.addEnchantment(book, ench));
             blockEntity.setItem(0, book);
         } else {
-            enchantments.forEach(ench -> blockEntity.getItem(0).enchant(ench.enchantment, ench.level));
+            ItemStack stack = blockEntity.getItem(0);
+            enchantments.forEach(ench -> {
+                if (EnchantmentHelper.getEnchantments(stack).containsKey(ench.enchantment) && EnchantmentHelper.getEnchantments(stack).get(ench.enchantment) < ench.level) {
+                    stack.getEnchantmentTags().removeIf(tag -> ((CompoundTag) tag).getString("id").equals(BuiltInRegistries.ENCHANTMENT.getKey(ench.enchantment).toString()));
+                }
+                if (EnchantmentHelper.getEnchantments(stack).get(ench.enchantment) == null) {
+                    stack.enchant(ench.enchantment, ench.level);
+                }
+            });
+            blockEntity.setItem(0, stack);
+            blockEntity.setChanged();
         }
         context.getPlayer().giveExperienceLevels(-PrismaticEnchanterMod.getTotalCost(enchantments));
+        //new DoneEnchantPacket(blockPos).sendTo((ServerPlayer) context.getPlayer());
     }
 }

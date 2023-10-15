@@ -52,7 +52,7 @@ public interface BasicSidedInventory extends WorldlyContainer {
      * Removes items from an inventory slot.
      *
      * @param slot  The slot to remove from.
-     * @param count How many items to remove. If there are less items in the slot than what are requested,
+     * @param count How many items to remove. If there are fewer items in the slot than what are requested,
      *              takes all items in that slot.
      */
     @Override
@@ -79,7 +79,7 @@ public interface BasicSidedInventory extends WorldlyContainer {
      *
      * @param slot  The inventory slot of which to replace the ItemStack.
      * @param stack The replacing ItemStack. If the stack is too big for
-     *              this inventory ({@link Container#getMaxStackSize()} ()}),
+     *              this inventory {@link Container#getMaxStackSize()},
      *              it gets resized to this inventory's maximum amount.
      */
     @Override

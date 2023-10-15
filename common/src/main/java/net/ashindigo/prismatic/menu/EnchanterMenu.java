@@ -15,7 +15,7 @@ import net.minecraft.world.item.Items;
 public class EnchanterMenu extends AbstractContainerMenu {
 
     public final EnchanterEntity entity;
-    private Callable refreshSearchResults;
+    public Callable refreshSearchResults;
 
     public EnchanterMenu(int i, Inventory inv, BlockPos pos) {
         super(PrismaticEnchanterMod.ENCHANTER_MENU.get(), i);

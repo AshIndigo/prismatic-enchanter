@@ -9,6 +9,7 @@ import dev.architectury.registry.registries.RegistrySupplier;
 import net.ashindigo.prismatic.block.EnchanterBlock;
 import net.ashindigo.prismatic.entity.EnchanterEntity;
 import net.ashindigo.prismatic.menu.EnchanterMenu;
+import net.ashindigo.prismatic.networking.DoneEnchantPacket;
 import net.ashindigo.prismatic.networking.EnchantPacket;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -45,6 +46,7 @@ public class PrismaticEnchanterMod {
 
     public static final SimpleNetworkManager NETWORK_MANAGER = SimpleNetworkManager.create(MOD_ID);
     public static final MessageType ENCHANT_PACKET = NETWORK_MANAGER.registerC2S("enchant", EnchantPacket::new);
+    public static final MessageType DONE_ENCHANT_PACKET = NETWORK_MANAGER.registerS2C("done_enchant", DoneEnchantPacket::new);
 
 
     public static void init() {
@@ -59,11 +61,6 @@ public class PrismaticEnchanterMod {
     }
 
     public static int getTotalCost(List<EnchantmentInstance> selected) {
-        int cost = 0;
-        for (EnchantmentInstance enchantmentInstance : selected) {
-            cost += (enchantmentInstance.enchantment.getRarity().ordinal() + 1) * 2;
-        }
-        return cost;
-        //return selected.stream().mapToInt(inst -> inst.enchantment.getMinCost(inst.level)).sum();
+        return selected.stream().mapToInt(enchantmentInstance -> (enchantmentInstance.enchantment.getRarity().ordinal() + 1) * 2).sum();
     }
 }
