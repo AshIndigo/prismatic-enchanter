@@ -117,6 +117,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
         enchantmentListComponent.clearList();
         updateCostText();
         enchantCheck();
+        greyIncompatible(null);
     }
 
     private void updateCostText() {
@@ -248,8 +249,17 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
                 enchantmentListComponent.addToList(entry, ((EnchantmentButton) button).level);
                 updateCostText();
                 enchantCheck();
+                greyIncompatible(entry);
             }
         }, (supplier) -> entry.getFullname(1).copy(), entry));
+    }
+
+    private void greyIncompatible(Enchantment entry) {
+        if (entry == null) {
+            this.enchantmentEntryList.forEach(btn -> btn.active = true);
+            return;
+        }
+        this.enchantmentEntryList.forEach(btn -> btn.active = btn.enchant.isCompatibleWith(entry) || btn.enchant.equals(entry));
     }
 
     public static boolean isCompatible(List<EnchantmentInstance> selected, Enchantment entry) {
@@ -430,6 +440,8 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
                 dec.visible = false;
             }
         }
+
+
 
         public void removeButton() {
             removeWidget(inc);
