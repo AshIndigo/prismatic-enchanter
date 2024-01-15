@@ -56,24 +56,25 @@ public class EnchantPacket extends BaseC2SMessage {
     @Override
     public void handle(NetworkManager.PacketContext context) {
         EnchanterEntity blockEntity = (EnchanterEntity) context.getPlayer().level.getBlockEntity(blockPos);
-        if (blockEntity.getItem(0).is(Items.BOOK)) {
-            ItemStack book = Items.ENCHANTED_BOOK.getDefaultInstance();
-            enchantments.forEach(ench -> EnchantedBookItem.addEnchantment(book, ench));
-            blockEntity.setItem(0, book);
-        } else {
-            ItemStack stack = blockEntity.getItem(0);
-            enchantments.forEach(ench -> {
-                if (EnchantmentHelper.getEnchantments(stack).containsKey(ench.enchantment) && EnchantmentHelper.getEnchantments(stack).get(ench.enchantment) < ench.level) {
-                    stack.getEnchantmentTags().removeIf(tag -> ((CompoundTag) tag).getString("id").equals(BuiltInRegistries.ENCHANTMENT.getKey(ench.enchantment).toString()));
-                }
-                if (EnchantmentHelper.getEnchantments(stack).get(ench.enchantment) == null) {
-                    stack.enchant(ench.enchantment, ench.level);
-                }
-            });
-            blockEntity.setItem(0, stack);
-            blockEntity.setChanged();
+        if (blockEntity != null) {
+            if (blockEntity.getItem(0).is(Items.BOOK)) {
+                ItemStack book = Items.ENCHANTED_BOOK.getDefaultInstance();
+                enchantments.forEach(ench -> EnchantedBookItem.addEnchantment(book, ench));
+                blockEntity.setItem(0, book);
+            } else {
+                ItemStack stack = blockEntity.getItem(0);
+                enchantments.forEach(ench -> {
+                    if (EnchantmentHelper.getEnchantments(stack).containsKey(ench.enchantment) && EnchantmentHelper.getEnchantments(stack).get(ench.enchantment) < ench.level) {
+                        stack.getEnchantmentTags().removeIf(tag -> ((CompoundTag) tag).getString("id").equals(BuiltInRegistries.ENCHANTMENT.getKey(ench.enchantment).toString()));
+                    }
+                    if (EnchantmentHelper.getEnchantments(stack).get(ench.enchantment) == null) {
+                        stack.enchant(ench.enchantment, ench.level);
+                    }
+                });
+                blockEntity.setItem(0, stack);
+                blockEntity.setChanged();
+            }
+            context.getPlayer().giveExperienceLevels(-PrismaticEnchanterMod.getTotalCost(enchantments));
         }
-        context.getPlayer().giveExperienceLevels(-PrismaticEnchanterMod.getTotalCost(enchantments));
-        //new DoneEnchantPacket(blockPos).sendTo((ServerPlayer) context.getPlayer());
     }
 }

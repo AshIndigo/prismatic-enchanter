@@ -124,7 +124,7 @@ public class EnchantmentListComponent extends GuiComponent implements Renderable
     public void addToList(Enchantment entry, int level) {
         int i = selectedEntryList.size();
         EnchantmentInstance inst = new EnchantmentInstance(entry, level);
-        SelectedEnchantmentButton btn = enchanterScreen.addRenderableWidget(new SelectedEnchantmentButton(updateScreenPosition(enchanterScreen.width, enchanterScreen.getImageWidth()) - 111, enchanterScreen.getTopPos() + 25 + (i * 19), 90, 19, entry.getFullname(level), button -> removeFromList(inst), (supplier) -> entry.getFullname(level).copy(), inst, isVisible()));
+        SelectedEnchantmentButton btn = enchanterScreen.addRenderableWidget(new SelectedEnchantmentButton((177 + (enchanterScreen.width - enchanterScreen.getImageWidth() - 200) / 2) - 111, enchanterScreen.getTopPos() + 25 + (i * 19), 90, 19, entry.getFullname(level), button -> removeFromList(inst), (supplier) -> entry.getFullname(level).copy(), inst, isVisible()));
         selectedEntryList.add(btn);
     }
 

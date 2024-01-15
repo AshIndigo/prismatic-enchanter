@@ -19,6 +19,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -31,6 +32,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
+
+    /*
+    actual block texture
+    custom sprite for XP cost (and probably review)
+    and a scrollbar for the review panel as well
+     */
 
     private static final ResourceLocation ENCHANTING_TABLE_LOCATION = PrismaticEnchanterMod.makeResourceLocation("textures/gui/enchanter.png");
     public static final ResourceLocation CREATIVE_INVENTORY_TABS = new ResourceLocation("textures/gui/container/creative_inventory/tabs.png");
@@ -68,16 +75,19 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
             if (inventory.player.experienceLevel >= PrismaticEnchanterMod.getTotalCost(selected)) {
                 new EnchantPacket(menu.entity.getBlockPos(), selected).sendToServer();
                 Minecraft.getInstance().player.playSound(SoundEvents.ENCHANTMENT_TABLE_USE, 1, Minecraft.getInstance().level.random.nextFloat() * 0.1f + 0.9f);
-                //refreshSearchResults(); // TODO Need to know when its done enchanting...
+                ItemStack stack = menu.getSlot(0).getItem();
+                if (stack.is(Items.BOOK)) { // I'll take bad ideas for 5$
+                    stack = Items.ENCHANTED_BOOK.getDefaultInstance();
+                    for (EnchantmentInstance ench : selected) {
+                        EnchantedBookItem.addEnchantment(stack, ench);
+                    }
+                } else {
+                    for (EnchantmentInstance ench : selected) {
+                        stack.enchant(ench.enchantment, ench.level);
+                    }
+                }
                 clearSelected();
-//                if (menu.getSlot(0).getItem().is(Items.BOOK)) { // I'll take bad ideas for 5$
-//                    ItemStack book = Items.ENCHANTED_BOOK.getDefaultInstance();
-//                    selected.forEach(ench -> EnchantedBookItem.addEnchantment(book, ench));
-//                    menu.getSlot(0).set(book);
-//                } else {
-//                    selected.forEach(ench -> menu.getSlot(0).getItem().enchant(ench.enchantment, ench.level));
-//                }
-                refreshSearchResults();
+                refreshSearchResults(stack);
             }
         }).size(45, 18).pos(this.leftPos + 34, this.topPos + 46).build();
         addRenderableWidget(enchantBtn);
@@ -170,14 +180,18 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
     }
 
     public void refreshSearchResults() {
+        refreshSearchResults(menu.getSlot(0).getItem());
+    }
+
+    public void refreshSearchResults(ItemStack stack) {
         enchantmentList.clear();
         enchantmentEntryList.forEach(EnchantmentButton::removeButton);
         enchantmentEntryList.clear();
         String s = this.searchBox.getValue();
         AtomicInteger i = new AtomicInteger();
         if (menu.getSlot(0).hasItem()) {
-            getAvailableEnchantmentResults(BuiltInRegistries.ENCHANTMENT.entrySet().stream().filter(resourceKeyEnchantmentEntry -> resourceKeyEnchantmentEntry.getValue().getFullname(1).getString().toLowerCase(Locale.ROOT).contains(s.toLowerCase(Locale.ROOT))), menu.getSlot(0).getItem(), true).forEach(inst -> {
-                Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(menu.getSlot(0).getItem());
+            getAvailableEnchantmentResults(BuiltInRegistries.ENCHANTMENT.entrySet().stream().filter(entry -> entry.getValue().getFullname(1).getString().toLowerCase(Locale.ROOT).contains(s.toLowerCase(Locale.ROOT))), stack, true).forEach(inst -> {
+                Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(stack);
                 if (isCompatible(enchantments.keySet(), inst.enchantment)) {
                     if (enchantments.containsKey(inst.enchantment)) {
                         if (enchantments.get(inst.enchantment) != inst.enchantment.getMaxLevel()) {
@@ -223,14 +237,25 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
 
     private void addEnchantToList(Enchantment entry, int i) {
         enchantmentList.add(entry);
-        enchantmentEntryList.add(new EnchantmentButton(leftPos + 173 + 20 - 1, topPos + 25 + (i * 19), 90, 19, entry.getFullname(1), button -> {
-            if (selected.stream().noneMatch(inst -> inst.enchantment.equals(entry))) { // TODO maybe replace based on ench level if different one is selected? // inst.level == ((EnchantmentButton) button).level &&
+        enchantmentEntryList.add(new EnchantmentButton(leftPos + 173 + 20 - 1, topPos + 25 + (i * 19), entry.getFullname(1), button -> {
+            if (selected.stream().anyMatch(inst -> inst.enchantment.equals(entry) && inst.level < ((EnchantmentButton) button).level)) {
+                EnchantmentInstance enchantmentInstance = selected.stream().filter(inst -> inst.enchantment.equals(entry) && inst.level < ((EnchantmentButton) button).level).findFirst().get();
+                selected.remove(enchantmentInstance);
+                enchantmentListComponent.removeFromList(enchantmentInstance);
+            }
+            if (selected.stream().noneMatch(inst -> inst.enchantment.equals(entry)) && isCompatible(selected, entry)) {
                 selected.add(new EnchantmentInstance(entry, ((EnchantmentButton) button).level));
                 enchantmentListComponent.addToList(entry, ((EnchantmentButton) button).level);
                 updateCostText();
                 enchantCheck();
             }
         }, (supplier) -> entry.getFullname(1).copy(), entry));
+    }
+
+    public static boolean isCompatible(List<EnchantmentInstance> selected, Enchantment entry) {
+        ArrayList<Enchantment> enchants = new ArrayList<>();
+        selected.forEach(sel -> enchants.add(sel.enchantment));
+        return isCompatible(enchants, entry);
     }
 
     public void enchantCheck() {
@@ -362,8 +387,8 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterMenu> {
             dec.visible = false;
         }
 
-        protected EnchantmentButton(int x, int y, int wid, int len, Component component, OnPress onPress, CreateNarration createNarration, Enchantment ench) {
-            this(x, y, wid, len, component, onPress, createNarration);
+        protected EnchantmentButton(int x, int y, Component component, OnPress onPress, CreateNarration createNarration, Enchantment ench) {
+            this(x, y, 90, 19, component, onPress, createNarration);
             enchant = ench;
             if (enchant.getMaxLevel() == 1) {
                 inc.active = false;
